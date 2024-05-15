@@ -10,6 +10,8 @@ _SPRITE_DMG(SpritePlayer, playerDown)\
 _SPRITE_DMG(SpriteWeapon, bone)\
 SPRITE_DEF_END
 
+#define TRUE 1
+#define FALSE 0
 
 #include "ZGBMain_Init.h"
 
@@ -20,7 +22,10 @@ extern struct weapon{
     uint8_t maxTime;
 };
 
+
 extern struct weapon boneWeapon;
 extern uint8_t isPressed;
+extern uint8_t isShooting;
+extern uint8_t currentDir;
 
 #endif

@@ -4,12 +4,14 @@
 #include "ZGBMain.h"
 #include "Scroll.h"
 
-
+//extern variables due to shared use with spriteWeapon
 UINT8 boneCount;
 UINT8 bonePos[2];
 UINT8 dirChange[2];
-UINT8 currentDir;
+uint8_t currentDir;
+
 uint8_t isPressed;
+uint8_t isShooting;
 
 struct weapon boneWeapon;
 
@@ -51,12 +53,55 @@ void changeDir(UINT8 key, playerInfo* data){
 	};
 }
 
-void movePlayer(uint8_t keypress)
+void moveSprite(Sprite* spr,uint8_t keypress)
 {
-	if(isPressed == 0){
-		TranslateSprite(THIS, data->vx, data->vy);
+	if(isPressed == FALSE){
+		TranslateSprite(spr, data->vx << delta_time, data->vy << delta_time);
 	}
 	currentDir = keypress;
+}
+
+void meleeTimer(){
+
+     if(boneWeapon.timer < boneWeapon.maxTime)
+    {
+        boneWeapon.timer++;
+    }
+    else if(boneWeapon.timer >= boneWeapon.maxTime){
+       
+        boneCount=0;
+        boneWeapon.timer = 0;
+        isPressed = FALSE;
+        
+    }
+}
+
+void PlayerAttack()
+{
+	if(KEY_PRESSED(J_A) && isShooting == FALSE){
+		if(boneCount < 1 && isPressed == FALSE){
+			SpriteManagerAdd(SpriteWeapon, bonePos[0], bonePos[1]);
+			boneCount++;
+			isPressed = TRUE;
+		}
+	}
+	if(KEY_PRESSED(J_B) && isPressed == FALSE){
+		isShooting = TRUE;
+	}
+
+	if(isShooting == FALSE)
+	{
+		meleeTimer();
+		bonePos[0] = THIS->x + dirChange[0];
+		bonePos[1] = THIS->y + dirChange[1];
+	}
+	else{
+		if(boneCount < 1){
+			SpriteManagerAdd(SpriteWeapon, bonePos[0], bonePos[1]);
+			boneCount++;
+		}
+		
+	}
 }
 
 void START() {
@@ -70,6 +115,9 @@ void START() {
 	data = (playerInfo*)THIS->custom_data;
 	data->vx =0;
 	data->vy =0;
+
+
+	
 	 
 }
 
@@ -78,50 +126,35 @@ void START() {
 void UPDATE() {
 
     if(KEY_PRESSED(J_UP)) {
-		anim_idle[1] = 1;
-		movePlayer(J_UP);
+		SetFrame(THIS, 1);
+		moveSprite(THIS,J_UP);
+		THIS->mirror = NO_MIRROR;
 	} 
 	else if(KEY_PRESSED(J_DOWN)) {
-		anim_idle[1] = 0;
-		movePlayer(J_DOWN);
+		SetFrame(THIS, 0);
+		moveSprite(THIS,J_DOWN);
+		THIS->mirror = NO_MIRROR;
 	}
 	else if(KEY_PRESSED(J_LEFT)) {
-		anim_idle[1] = 3;
-		movePlayer(J_LEFT);
+		SetFrame(THIS, 2);
+		THIS->mirror = V_MIRROR;
+		moveSprite(THIS,J_LEFT);
 	}
 	else if(KEY_PRESSED(J_RIGHT)) {
-		anim_idle[1] = 2;
-		movePlayer(J_RIGHT);
+		SetFrame(THIS, 2);
+		THIS->mirror = NO_MIRROR;
+		moveSprite(THIS,J_RIGHT);
 	}
-	SetSpriteAnim(THIS,anim_idle, 15);
+	
 
 	changeDir(currentDir, data);
 
-	if(KEY_PRESSED(J_A)){
-		if(boneCount < 1 && isPressed == 0){
-			SpriteManagerAdd(SpriteWeapon, bonePos[0], bonePos[1]);
-			boneCount++;
-			isPressed = 1;
-		}
-	}
-
 	
-
+	PlayerAttack();
     
-    if(boneWeapon.timer < boneWeapon.maxTime)
-    {
-        boneWeapon.timer++;
-    }
-    else if(boneWeapon.timer >= boneWeapon.maxTime){
-       
-        boneCount=0;
-        boneWeapon.timer = 0;
-        isPressed = 0;
-        
-    }
+   
 	
-	bonePos[0] = THIS->x + dirChange[0];
-	bonePos[1] = THIS->y + dirChange[1];
+	
 	
 	
 }
